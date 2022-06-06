@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 from cltl.combot.infra.event import Event
 from cltl.combot.infra.event.memory import SynchronousEventBus
-from cltl_service.backend.schema import TextSignalEvent
+from cltl.combot.event.emissor import TextSignalEvent
 
 from cltl.about.api import About
 from cltl_service.about.service import AboutService
