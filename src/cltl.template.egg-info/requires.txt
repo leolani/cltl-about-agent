@@ -1,0 +1,8 @@
+cltl.combot
+
+[impl]
+numpy
+
+[service]
+emissor
+flask
