@@ -10,5 +10,4 @@ class TestAbout(unittest.TestCase):
     def test_response(self):
         speaker_name = "Piek"
         response = self.about.respond("Tell me a joke", speaker_name)
-        print(response)
-        self.assertRegex(response, speaker_name)
+        self.assertRegex(response, f" {speaker_name}")
