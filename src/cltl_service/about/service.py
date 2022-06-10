@@ -1,14 +1,16 @@
 import logging
 from typing import List
 
+from cltl.combot.event.emissor import TextSignalEvent
 from cltl.combot.infra.config import ConfigurationManager
 from cltl.combot.infra.event import Event, EventBus
 from cltl.combot.infra.resource import ResourceManager
 from cltl.combot.infra.time_util import timestamp_now
 from cltl.combot.infra.topic_worker import TopicWorker
-from cltl.about.api import About
-from cltl.combot.event.emissor import TextSignalEvent
+from cltl_service.emissordata.client import EmissorDataClient
 from emissor.representation.scenario import TextSignal
+
+from cltl.about.api import About
 
 logger = logging.getLogger(__name__)
 
@@ -18,19 +20,21 @@ CONTENT_TYPE_SEPARATOR = ';'
 
 class AboutService:
     @classmethod
-    def from_config(cls, about: About, event_bus: EventBus, resource_manager: ResourceManager,
-                    config_manager: ConfigurationManager):
+    def from_config(cls, about: About, emissor_client: EmissorDataClient, event_bus: EventBus,
+                    resource_manager: ResourceManager, config_manager: ConfigurationManager):
         config = config_manager.get_config("cltl.about")
 
         return cls(config.get("topic_input"), config.get("topic_response"), config.get("topic_forward"),
-                   about, config.get("intentions", multi=True), config.get("topic_intentions"),
+                   about, emissor_client, config.get("intentions", multi=True), config.get("topic_intentions"),
                    event_bus, resource_manager)
 
-    def __init__(self, input_topic: str, response_topic: str, forward_topic: str, about: About,
+    def __init__(self, input_topic: str, response_topic: str, forward_topic: str,
+                 about: About, emissor_client: EmissorDataClient,
                  intentions: List[str], intention_topic: str,
                  event_bus: EventBus, resource_manager: ResourceManager):
         self._about = about
 
+        self._emissor_client = emissor_client
         self._event_bus = event_bus
         self._resource_manager = resource_manager
 
@@ -74,6 +78,7 @@ class AboutService:
             logger.debug("Forwarded %s to topic %s", event.payload.signal.text, self._forward_topic)
 
     def _create_payload(self, response):
-        signal = TextSignal.for_scenario(None, timestamp_now(), timestamp_now(), None, response)
+        scenario_id = self._emissor_client.get_current_scenario_id()
+        signal = TextSignal.for_scenario(scenario_id, timestamp_now(), timestamp_now(), None, response)
 
-        return TextSignalEvent.create(signal)
+        return TextSignalEvent.for_agent(signal)

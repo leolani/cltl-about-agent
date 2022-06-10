@@ -28,7 +28,8 @@ setup(
             'fuzzywuzzy'
         ],
         "service": [
-            'cltl.combot'
+            'cltl.combot',
+            'cltl.emissor-data[client]'
         ]
     }
 )
