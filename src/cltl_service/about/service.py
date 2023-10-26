@@ -25,7 +25,7 @@ class AboutService:
         config = config_manager.get_config("cltl.about")
 
         return cls(config.get("topic_input"), config.get("topic_response"), config.get("topic_forward"),
-                   about, emissor_client, config.get("intentions", multi=True), config.get("topic_intention"),
+                   about, emissor_client, config.get("intentions", multi=True), config.get("topic_intentions"),
                    event_bus, resource_manager)
 
     def __init__(self, input_topic: str, response_topic: str, forward_topic: str,
