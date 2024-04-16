@@ -23,17 +23,17 @@ class AboutService:
     def from_config(cls, about: About, emissor_client: EmissorDataClient, event_bus: EventBus,
                     resource_manager: ResourceManager, config_manager: ConfigurationManager):
         config = config_manager.get_config("cltl.about")
-
+        language = config.get("language")
         return cls(config.get("topic_input"), config.get("topic_response"), config.get("topic_forward"),
                    about, emissor_client, config.get("intentions", multi=True), config.get("topic_intentions"),
-                   event_bus, resource_manager)
+                   event_bus, resource_manager, language)
 
     def __init__(self, input_topic: str, response_topic: str, forward_topic: str,
                  about: About, emissor_client: EmissorDataClient,
                  intentions: List[str], intention_topic: str,
-                 event_bus: EventBus, resource_manager: ResourceManager):
+                 event_bus: EventBus, resource_manager: ResourceManager, language: str):
         self._about = about
-
+        self._language = language
         self._emissor_client = emissor_client
         self._event_bus = event_bus
         self._resource_manager = resource_manager
@@ -68,7 +68,7 @@ class AboutService:
         self._topic_worker = None
 
     def _process(self, event: Event[TextSignalEvent]):
-        response = self._about.respond(event.payload.signal.text)
+        response = self._about.respond(event.payload.signal.text, self._language)
         if response:
             about_event = self._create_payload(response)
             self._event_bus.publish(self._response_topic, Event.for_payload(about_event))
