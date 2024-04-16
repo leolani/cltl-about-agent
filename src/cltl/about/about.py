@@ -14,15 +14,32 @@ class AboutImpl(About):
         "Ok",
     ]
 
+    ADDRESS_NL = [
+        "Tja",
+        "Kijk",
+        "Dat moet je zo zien",
+        "Luister",
+        "Ik zeg je",
+        "Raad eens",
+        "Ok",
+    ]
+    
     def __init__(self):
         self._qna = QnA()
         self.started = False
 
 
-    def respond(self, statement: str, speaker_name: str = None) -> str:
-        result = self._qna.query(statement)
+    def respond(self, statement: str, speaker_name: str = None, language: str = "en") -> str:
+        if language=="nl":
+            result = self._qna.query_nl(statement)
+            if result:
+                score, answer = result
+                say = "{}{} {}".format(choice(self.ADDRESS_NL), f" {speaker_name}," if speaker_name else "", answer)
+                return say
+        else:
+            result = self._qna.query(statement)
 
-        if result:
-            score, answer = result
-            say = "{}{} {}".format(choice(self.ADDRESS), f" {speaker_name}," if speaker_name else "", answer)
-            return say
+            if result:
+                score, answer = result
+                say = "{}{} {}".format(choice(self.ADDRESS), f" {speaker_name}," if speaker_name else "", answer)
+                return say
