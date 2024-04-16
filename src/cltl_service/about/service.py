@@ -34,6 +34,8 @@ class AboutService:
                  event_bus: EventBus, resource_manager: ResourceManager, language: str):
         self._about = about
         self._language = language
+        if not language:
+            language="en"
         self._emissor_client = emissor_client
         self._event_bus = event_bus
         self._resource_manager = resource_manager
