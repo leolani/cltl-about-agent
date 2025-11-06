@@ -4,10 +4,10 @@ from typing import List
 from cltl.combot.event.emissor import TextSignalEvent
 from cltl.combot.infra.config import ConfigurationManager
 from cltl.combot.infra.event import Event, EventBus
+from cltl.combot.infra.event.util import extract_scenario_id
 from cltl.combot.infra.resource import ResourceManager
 from cltl.combot.infra.time_util import timestamp_now
 from cltl.combot.infra.topic_worker import TopicWorker
-from cltl_service.emissordata.client import EmissorDataClient
 from emissor.representation.scenario import TextSignal
 
 from cltl.about.api import About
@@ -20,23 +20,22 @@ CONTENT_TYPE_SEPARATOR = ';'
 
 class AboutService:
     @classmethod
-    def from_config(cls, about: About, emissor_client: EmissorDataClient, event_bus: EventBus,
+    def from_config(cls, about: About, event_bus: EventBus,
                     resource_manager: ResourceManager, config_manager: ConfigurationManager):
         config = config_manager.get_config("cltl.about")
         language = config.get("language")
         return cls(config.get("topic_input"), config.get("topic_response"), config.get("topic_forward"),
-                   about, emissor_client, config.get("intentions", multi=True), config.get("topic_intentions"),
+                   about, config.get("intentions", multi=True), config.get("topic_intentions"),
                    event_bus, resource_manager, language)
 
     def __init__(self, input_topic: str, response_topic: str, forward_topic: str,
-                 about: About, emissor_client: EmissorDataClient,
+                 about: About,
                  intentions: List[str], intention_topic: str,
                  event_bus: EventBus, resource_manager: ResourceManager, language: str):
         self._about = about
         self._language = language
         if not language:
             language="en"
-        self._emissor_client = emissor_client
         self._event_bus = event_bus
         self._resource_manager = resource_manager
 
@@ -70,17 +69,17 @@ class AboutService:
         self._topic_worker = None
 
     def _process(self, event: Event[TextSignalEvent]):
-        response = self._about.respond(event.payload.signal.text, self._language)
+        response = self._about.respond(event.payload.signal.text, language=self._language)
         if response:
-            about_event = self._create_payload(response)
-            self._event_bus.publish(self._response_topic, Event.for_payload(about_event))
+            scenario_id = extract_scenario_id(event)
+            about_event = self._create_payload(response, scenario_id)
+            self._event_bus.publish(self._response_topic, Event.for_payload(about_event, source=event))
             logger.debug("Answered %s with %s", event.payload.signal.text, response)
         elif self._forward_topic:
             self._event_bus.publish(self._forward_topic, event)
             logger.debug("Forwarded %s to topic %s", event.payload.signal.text, self._forward_topic)
 
-    def _create_payload(self, response):
-        scenario_id = self._emissor_client.get_current_scenario_id()
+    def _create_payload(self, response, scenario_id):
         signal = TextSignal.for_scenario(scenario_id, timestamp_now(), timestamp_now(), None, response)
 
         return TextSignalEvent.for_agent(signal)

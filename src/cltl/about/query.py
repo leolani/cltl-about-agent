@@ -2,14 +2,12 @@
 Answers to Simple Questions using Fuzzy Matching!
 """
 
-from cltl.commons.language_data.sentences import *
-
-from fuzzywuzzy import fuzz
-
+import datetime
 from random import choice
 from time import strftime
-import datetime
-import os
+
+from cltl.commons.language_data.sentences import *
+from fuzzywuzzy import fuzz
 
 
 class QnA:
