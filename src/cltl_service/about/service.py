@@ -24,18 +24,22 @@ class AboutService:
                     resource_manager: ResourceManager, config_manager: ConfigurationManager):
         config = config_manager.get_config("cltl.about")
         language = config.get("language")
+        buffer_size = config.get_int("buffer_size") if "buffer_size" in config else 1
+
         return cls(config.get("topic_input"), config.get("topic_response"), config.get("topic_forward"),
                    about, config.get("intentions", multi=True), config.get("topic_intentions"),
-                   event_bus, resource_manager, language)
+                   buffer_size, event_bus, resource_manager, language)
 
     def __init__(self, input_topic: str, response_topic: str, forward_topic: str,
                  about: About,
                  intentions: List[str], intention_topic: str,
-                 event_bus: EventBus, resource_manager: ResourceManager, language: str):
+                 buffer_size: int, event_bus: EventBus, resource_manager: ResourceManager, language: str):
         self._about = about
         self._language = language
         if not language:
             language="en"
+
+        self._buffer_size = buffer_size
         self._event_bus = event_bus
         self._resource_manager = resource_manager
 
@@ -57,6 +61,7 @@ class AboutService:
         self._topic_worker = TopicWorker([self._input_topic], self._event_bus, provides=provided_topics,
                                          intentions=self._intentions, intention_topic=self._intention_topic,
                                          resource_manager=self._resource_manager, processor=self._process,
+                                         buffer_size=self._buffer_size,
                                          name=self.__class__.__name__)
         self._topic_worker.start().wait()
 
