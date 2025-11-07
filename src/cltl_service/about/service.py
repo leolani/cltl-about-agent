@@ -81,7 +81,7 @@ class AboutService:
             self._event_bus.publish(self._response_topic, Event.for_payload(about_event, source=event))
             logger.debug("Answered %s with %s", event.payload.signal.text, response)
         elif self._forward_topic:
-            self._event_bus.publish(self._forward_topic, event)
+            self._event_bus.publish(self._forward_topic, Event.for_payload(event.payload, source=event))
             logger.debug("Forwarded %s to topic %s", event.payload.signal.text, self._forward_topic)
 
     def _create_payload(self, response, scenario_id):
